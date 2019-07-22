@@ -1,6 +1,6 @@
 require File.expand_path("../../test_helper", __FILE__)
 
-class CcAddressesTest < ActiveSupport::TestCase
+class IncomingEmailsMailHandlerTest < ActiveSupport::TestCase
   fixtures :projects, :enabled_modules, :issues, :users,
            :email_addresses, :user_preferences, :members,
            :member_roles, :roles, :tokens,
@@ -16,6 +16,24 @@ class CcAddressesTest < ActiveSupport::TestCase
 
   def teardown
     Setting.clear_cache
+  end
+
+  test "should preserve address of unkown user in issue body" do
+    Role.anonymous.add_permission!(:add_issues)
+    Role.anonymous.add_permission!(:add_issue_watchers)
+    assert_no_difference 'User.count' do
+      issue = submit_email(
+                'ticket_by_unknown_user.eml',
+                :issue => {:project => 'ecookbook'},
+                :unknown_user => 'accept'
+              )
+      assert issue.is_a?(Issue)
+      assert issue.author.anonymous?
+      issue.reload
+      assert issue.watched_by?(User.find_by_mail('dlopper@somenet.foo'))
+      assert_equal 1, issue.watchers.size
+      assert_include %{From: john.doe@somenet.foo}, issue.description
+    end
   end
 
   test "should put incoming email into project configured for user" do
