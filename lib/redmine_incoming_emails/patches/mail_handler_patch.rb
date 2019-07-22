@@ -1,36 +1,18 @@
-require_dependency 'mail_handler'
-
-module IncomingEmails
+module RedmineIncomingEmails
   module Patches
     module MailHandlerPatch
-      def self.included(base) # :nodoc:
-        base.extend(ClassMethods)
-
-        # sending instance methods to module
-        base.send(:include, InstanceMethods)
-        base.class_eval do
-          unloadable
-          
-          alias_method_chain :target_project, :user_specific_defaults
+      def self.apply
+        unless MailHandler < self
+          MailHandler.prepend self
         end
       end
 
-      module ClassMethods
-      end
-
-      module InstanceMethods
-        def target_project_with_user_specific_defaults
-          targetProjectId = Setting.plugin_redmine_incoming_emails[user.mail].to_i
-          target = Project.find(targetProjectId) if targetProjectId > 0
-          target = target_project_without_user_specific_defaults if target.nil?
-          return target
-        end
+      def target_project
+        target_project_id = Setting.plugin_redmine_incoming_emails[user.mail].to_i
+        target = Project.find(target_project_id) if target_project_id > 0
+        target || super
       end
     end
   end
 end
 
-# Include the module if it is not already included
-unless MailHandler.included_modules.include? IncomingEmails::Patches::MailHandlerPatch
-    MailHandler.send(:include, IncomingEmails::Patches::MailHandlerPatch)
-end

@@ -29,7 +29,7 @@ Further information about plugin installation can be found at: http://www.redmin
 
 ## Compatibility
 
-The latest version of this plugin is only tested with Redmine 2.3.x.
+The latest version of this plugin is only tested with Redmine 4.x.
 
 ## License
 
