@@ -12,7 +12,7 @@ Redmine::Plugin.register :redmine_incoming_emails do
            :default => {} )
 end
 
-Rails.configuration.to_prepare do
+require File.dirname(__FILE__) + '/lib/redmine_incoming_emails/patches/mail_handler_patch.rb'
+Rails.application.config.after_initialize do
   RedmineIncomingEmails::Patches::MailHandlerPatch.apply
 end
-
